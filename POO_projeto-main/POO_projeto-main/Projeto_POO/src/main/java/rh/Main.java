@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    private static Scanner scanner = new Scanner(System.in);
+    private static final Scanner scanner = new Scanner(System.in);
     private static FuncionarioDAO funcionarioDAO;
     private static EventoFolhaDAO eventoDAO;
 
@@ -20,7 +20,7 @@ public class Main {
             System.out.println("Conexão com o banco de dados estabelecida.");
         } catch (Exception e) {
             System.err.println("Erro ao conectar ao banco de dados: " + e.getMessage());
-            System.out.println("Verifique se o MySQL está rodando e se as credenciais (cliente / sem senha) estão corretas.");
+            System.out.println("Verifique se o XAMPP/MySQL está rodando e se as credenciais estão corretas.");
             return;
         }
 
@@ -36,7 +36,7 @@ public class Main {
             System.out.println("7. Gerar Relatório: Totais por Tipo de Funcionário");
             System.out.println("8. Sair");
             System.out.print("Escolha uma opção: ");
-            
+
             try {
                 opcao = Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
@@ -45,32 +45,15 @@ public class Main {
             }
 
             switch (opcao) {
-                case 1:
-                    cadastrarFuncionario();
-                    break;
-                case 2:
-                    listarFuncionarios();
-                    break;
-                case 3:
-                    atualizarFuncionario();
-                    break;
-                case 4:
-                    deletarFuncionario();
-                    break;
-                case 5:
-                    adicionarEvento();
-                    break;
-                case 6:
-                    relatorioFolhaFuncionario();
-                    break;
-                case 7:
-                    relatorioTotalPorTipo();
-                    break;
-                case 8:
-                    System.out.println("Saindo...");
-                    break;
-                default:
-                    System.out.println("Opção inválida.");
+                case 1 -> cadastrarFuncionario();
+                case 2 -> listarFuncionarios();
+                case 3 -> atualizarFuncionario();
+                case 4 -> deletarFuncionario();
+                case 5 -> adicionarEvento();
+                case 6 -> relatorioFolhaFuncionario();
+                case 7 -> relatorioTotalPorTipo();
+                case 8 -> System.out.println("Saindo...");
+                default -> System.out.println("Opção inválida.");
             }
         } while (opcao != 8);
     }
@@ -85,24 +68,29 @@ public class Main {
         System.out.print("Escolha o tipo: ");
         int tipo = Integer.parseInt(scanner.nextLine());
 
-        Funcionario f = null;
-        if (tipo == 1) {
-            System.out.print("Salário Base: R$ ");
-            double salario = Double.parseDouble(scanner.nextLine());
-            f = new FuncionarioCLT(0, nome, depto, true, salario);
-        } else if (tipo == 2) {
-            System.out.print("Valor do Contrato: R$ ");
-            double valor = Double.parseDouble(scanner.nextLine());
-            f = new FuncionarioPJ(0, nome, depto, true, valor);
-        } else if (tipo == 3) {
-            System.out.print("Valor da Hora: R$ ");
-            double valorHora = Double.parseDouble(scanner.nextLine());
-            System.out.print("Horas Trabalhadas: ");
-            int horas = Integer.parseInt(scanner.nextLine());
-            f = new FuncionarioHorista(0, nome, depto, true, valorHora, horas);
-        } else {
-            System.out.println("Tipo inválido.");
-            return;
+        Funcionario f;
+        switch (tipo) {
+            case 1 -> {
+                System.out.print("Salário Base: R$ ");
+                double salario = Double.parseDouble(scanner.nextLine());
+                f = new FuncionarioCLT(0, nome, depto, true, salario);
+            }
+            case 2 -> {
+                System.out.print("Valor do Contrato: R$ ");
+                double valor = Double.parseDouble(scanner.nextLine());
+                f = new FuncionarioPJ(0, nome, depto, true, valor);
+            }
+            case 3 -> {
+                System.out.print("Valor da Hora: R$ ");
+                double valorHora = Double.parseDouble(scanner.nextLine());
+                System.out.print("Horas Trabalhadas: ");
+                int horas = Integer.parseInt(scanner.nextLine());
+                f = new FuncionarioHorista(0, nome, depto, true, valorHora, horas);
+            }
+            default -> {
+                System.out.println("Tipo inválido.");
+                return;
+            }
         }
 
         funcionarioDAO.adicionar(f);
@@ -121,7 +109,7 @@ public class Main {
         System.out.print("Digite o ID do funcionário a ser atualizado: ");
         int id = Integer.parseInt(scanner.nextLine());
         Funcionario f = funcionarioDAO.buscarPorId(id);
-        
+
         if (f == null) {
             System.out.println("Funcionário não encontrado.");
             return;
@@ -140,23 +128,27 @@ public class Main {
         if (ativo.equalsIgnoreCase("S")) f.setAtivo(true);
         else if (ativo.equalsIgnoreCase("N")) f.setAtivo(false);
 
-        // Atualizar campos específicos com polimorfismo
-        if (f instanceof FuncionarioCLT) {
-            System.out.print("Novo Salário Base (" + ((FuncionarioCLT) f).getSalarioBase() + "): ");
-            String input = scanner.nextLine();
-            if (!input.trim().isEmpty()) ((FuncionarioCLT) f).setSalarioBase(Double.parseDouble(input));
-        } else if (f instanceof FuncionarioPJ) {
-            System.out.print("Novo Valor Contrato (" + ((FuncionarioPJ) f).getValorContrato() + "): ");
-            String input = scanner.nextLine();
-            if (!input.trim().isEmpty()) ((FuncionarioPJ) f).setValorContrato(Double.parseDouble(input));
-        } else if (f instanceof FuncionarioHorista) {
-            System.out.print("Novo Valor Hora (" + ((FuncionarioHorista) f).getValorHora() + "): ");
-            String input = scanner.nextLine();
-            if (!input.trim().isEmpty()) ((FuncionarioHorista) f).setValorHora(Double.parseDouble(input));
-            
-            System.out.print("Novas Horas Trabalhadas (" + ((FuncionarioHorista) f).getHorasTrabalhadas() + "): ");
-            input = scanner.nextLine();
-            if (!input.trim().isEmpty()) ((FuncionarioHorista) f).setHorasTrabalhadas(Integer.parseInt(input));
+        switch (f) {
+            case FuncionarioCLT clt -> {
+                System.out.print("Novo Salário Base (" + clt.getSalarioBase() + "): ");
+                String input = scanner.nextLine();
+                if (!input.trim().isEmpty()) clt.setSalarioBase(Double.parseDouble(input));
+            }
+            case FuncionarioPJ pj -> {
+                System.out.print("Novo Valor Contrato (" + pj.getValorContrato() + "): ");
+                String input = scanner.nextLine();
+                if (!input.trim().isEmpty()) pj.setValorContrato(Double.parseDouble(input));
+            }
+            case FuncionarioHorista horista -> {
+                System.out.print("Novo Valor Hora (" + horista.getValorHora() + "): ");
+                String input = scanner.nextLine();
+                if (!input.trim().isEmpty()) horista.setValorHora(Double.parseDouble(input));
+
+                System.out.print("Novas Horas Trabalhadas (" + horista.getHorasTrabalhadas() + "): ");
+                input = scanner.nextLine();
+                if (!input.trim().isEmpty()) horista.setHorasTrabalhadas(Integer.parseInt(input));
+            }
+            default -> {}
         }
 
         funcionarioDAO.atualizar(f);
@@ -197,11 +189,10 @@ public class Main {
     private static void relatorioFolhaFuncionario() {
         System.out.println("\n--- Relatório: Folha do Mês por Funcionário ---");
         List<Funcionario> funcionarios = funcionarioDAO.listarTodos();
-        
+
         for (Funcionario f : funcionarios) {
             if (!f.isAtivo()) continue;
 
-            // POLIMORFISMO: Chamada de método com override obrigatório
             double pagamentoBase = f.calcularPagamento();
             double totalAdicionais = 0;
             double totalDescontos = 0;
@@ -230,28 +221,27 @@ public class Main {
     private static void relatorioTotalPorTipo() {
         System.out.println("\n--- Relatório: Totais por Tipo de Funcionário ---");
         List<Funcionario> funcionarios = funcionarioDAO.listarTodos();
-        
+
         double totalCLT = 0, totalPJ = 0, totalHorista = 0;
 
         for (Funcionario f : funcionarios) {
             if (!f.isAtivo()) continue;
-            
+
             double base = f.calcularPagamento();
             double adic = 0, desc = 0;
-            
+
             for (EventoFolha e : eventoDAO.buscarPorFuncionario(f.getId())) {
                 if (e.getTipoEvento().equals("ADICIONAL")) adic += e.getValor();
                 else desc += e.getValor();
             }
-            
+
             double liquido = base + adic - desc;
 
-            if (f instanceof FuncionarioCLT) {
-                totalCLT += liquido;
-            } else if (f instanceof FuncionarioPJ) {
-                totalPJ += liquido;
-            } else if (f instanceof FuncionarioHorista) {
-                totalHorista += liquido;
+            switch (f) {
+                case FuncionarioCLT clt -> totalCLT += liquido;
+                case FuncionarioPJ pj -> totalPJ += liquido;
+                case FuncionarioHorista horista -> totalHorista += liquido;
+                default -> {}
             }
         }
 
